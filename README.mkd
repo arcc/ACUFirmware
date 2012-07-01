@@ -1,0 +1,11 @@
+ARXTalk
+=======
+
+Firmware for the LoFASM ARX Control Unit (ACU). Depends on CmdMessenger and
+Streaming libraries.
+
+Does require a modified version of the CmdMessenger library, which is included
+here. Modifications are being submitted to the author, and may eventually become
+part of the upstream repo.
+
+
