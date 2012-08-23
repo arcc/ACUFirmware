@@ -6,13 +6,18 @@
  *****************************************************************************/
 
 #include "Arduino.h"
+#include <EEPROM.h>
+
+
+int EEPROM_ADDR = 0;
 
 int LED_SIGNAL = 13;
 
 int F0 = 6;
 int F1 = 7;
 
-int FEE[4] = {2, 3, 4, 5};
+//int FEE[4] = {2, 3, 4, 5};
+int FEE[4] = {5, 4, 3, 2};
 
 int G0[4] = {8, 9, 10, 11};
 int G1[4] = {A0, A1, A2, A3};
@@ -33,30 +38,47 @@ void Blink()
     delay(50);
 }
 
-void Attens(int levels)
+bool WriteAtten(int atten, int levels)
 {
-    for (int i=0;i<4;i++)
+
+    if (atten==0)
     {
-        digitalWrite(G0[i],bitRead(levels,i));
+        for (int i=0;i<4;i++)
+        {
+            digitalWrite(G0[i],bitRead(levels,i));
+        }
+        return true;
     }
-    for (int i=0;i<4;i++)
+    else if (atten==1)
     {
-        digitalWrite(G1[i],bitRead(levels,i+4));
-    }
+        for (int i=0;i<4;i++)
+        {
+            digitalWrite(G1[i],bitRead(levels,i));
+        }
+        return true;
+    }   
+    else
+        return false;
 }
-
-int ReadAttens()
+int ReadAtten(int atten)
 {
-    int out;
-    for (int i=0;i<4;i++)
+    int out = -1;
+    if(atten==0)
     {
-        bitWrite(out, i, digitalRead(G0[i]));
+        out = 0;
+        for (int i=0;i<4;i++)
+        {
+            bitWrite(out, i, digitalRead(G0[i]));
+        }
     }
-    for (int i=0;i<4;i++)
+    else if (atten==1)
     {
-        bitWrite(out, i+4, digitalRead(G1[i]));
+        out = 0;
+        for (int i=0;i<4;i++)
+        {
+            bitWrite(out, i, digitalRead(G1[i]));
+        }
     }
-
     return out;
 }
 
@@ -64,78 +86,62 @@ void WriteFEE(int channel, bool power)
 {
     digitalWrite(FEE[channel], power);
 }
-
 bool ReadFEE(int channel)
 {
     bool state = digitalRead(FEE[channel]);
     return state;
 }
-void Filter(int filter)
+
+void WriteFilter(int filter)
 {
     digitalWrite(F0, bitRead(filter,0));
     digitalWrite(F1, bitRead(filter,1));
 }
-
 int ReadFilter()
 {
-    int filter;
+    int filter = 0;
     bitWrite(filter, 0, digitalRead(F0));
     bitWrite(filter, 1, digitalRead(F1));
 
     return filter;
 }
 
-char Checksum(char payload[])
+char Checksum(char payload[], int len)
 {
-    return payload[0] ^ payload[1] ^ payload[2];
-}
+    char temp = '\0';
+    for(int i = 0; i < len; i++)
+        temp = temp^payload[i];
 
-void BuildPayload(char payload[])
-{
-    payload[0] = 0xff;
-    payload[1] = char(ReadAttens());
-
-    int fee_filter, filter;
-    filter = ReadFilter();
-    bitWrite(fee_filter, 4, bitRead(filter, 0));
-    bitWrite(fee_filter, 5, bitRead(filter, 1));
-    for (int i=0; i<4; i++)
-        bitWrite(fee_filter, i, ReadFEE(i));
-
-    payload[2] = fee_filter;
-    payload[3] = Checksum(payload);
-}
-
-bool ProcessPayload(char payload[])
-{
-    if (Checksum(payload) == payload[3])
-    { 
-        int levels = int(payload[1]);
-        int fee_filter = int(payload[2]);
-
-        Attens(levels);
-        int filter;
-        bitWrite(filter, 0, bitRead(fee_filter, 4));
-        bitWrite(filter, 1, bitRead(fee_filter, 5));
-        Filter(filter);
-        for (int i=0; i<4; i++)
-            WriteFEE(i,bitRead(fee_filter, i));
-
-        return true;
-    }
-    else
-        return false;
+    return temp;
 }
 
 void PinSetup()
 {
     pinMode(LED_SIGNAL, OUTPUT);
+    digitalWrite(LED_SIGNAL, LOW);
     pinMode(F0, OUTPUT);
+    digitalWrite(F0, LOW);
     pinMode(F1, OUTPUT);
+    digitalWrite(F1, LOW);
     for (int i=0;i<4;i++)
     {
         pinMode(G0[i], OUTPUT);
+        digitalWrite(G0[i], HIGH);
         pinMode(G1[i], OUTPUT);
+        digitalWrite(G1[i], HIGH);
         pinMode(FEE[i], OUTPUT);
+        digitalWrite(FEE[i], LOW);
     }
+}
+
+bool WriteEEPROMAddr(int addr)
+{
+    if (addr > 254)
+        return false;
+    else
+        EEPROM.write(EEPROM_ADDR,addr);
+}
+int ReadEEPROMAddr()
+{
+    return (int)EEPROM.read(EEPROM_ADDR);
 }

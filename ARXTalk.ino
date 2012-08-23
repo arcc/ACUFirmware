@@ -17,6 +17,7 @@ Dependencies:
 
 // CmdMessenger library available from https://github.com/dreamcat4/CmdMessenger
 #include <CmdMessenger.h>
+#include <EEPROM.h>
 
 // Base64 library available from https://github.com/adamvr/arduino-base64
 /*#include <Base64.h>*/
@@ -69,9 +70,16 @@ enum
 
 messengerCallbackFunction messengerCallbacks[] = 
 {
-  ready,            // 004 in this example
-  read_config,      // 005 
-  write,            // 006 
+  ready,            // 004
+  fee_read,         // 005
+  fee_write,        // 006
+  filter_read,      // 007
+  filter_write,     // 008
+  atten_read,       // 009
+  atten_write,      // 010
+  eeprom_read,      // 011
+  eeprom_write,     // 012
+  
   NULL
 };
 
@@ -86,28 +94,161 @@ void ready()
     Blink();
 }
 
-void read_config()
+void fee_read()
 {
-    char payload[5] = {0xff,0x00,0xaf,0xdd,'\0'};
-    BuildPayload(payload);
-    cmdMessenger.sendCmd(kACK,payload,4);
-    Blink();
-}
-
-void write()
-{
-    if ( cmdMessenger.available() )
+    char buf[2] = {'\0'};
+    cmdMessenger.copyString(buf, 2);
+    if(buf[0])
     {
-        char buf[6] = { '\0' };
-        cmdMessenger.copyString(buf, 6);
-        if(buf[0])
-            if (ProcessPayload(buf))
-                cmdMessenger.sendCmd(kACK,"Written");
-            else
-                cmdMessenger.sendCmd(kERR,"ChecksumFailure");
+        int chan = atoi(buf);
+        if(chan < 4 && chan>=0)
+        {
+            char out [2] = {'\0'};
+            itoa((int)ReadFEE(chan),out,10);
+            cmdMessenger.sendCmd(kACK,out);
+        }
+        else
+        {
+            String msg = "Chan ";
+            msg += buf[0];
+            msg += " cannot be understood";
+            char out [30] = {'\0'};
+            msg.toCharArray(out,30);
+            cmdMessenger.sendCmd(kERR,out);
+        }
     }
     Blink();
 }
+
+void fee_write()
+{
+    char buf[4] = {'\0'};
+    cmdMessenger.copyString(buf, 4);
+    if(buf[0])
+    {
+        char tmp[4] = {'\0'};
+        tmp[0] = buf[0];
+        int chan = atoi(tmp);
+        if(buf[1] == '|')
+        {
+            tmp[0] = buf[2];
+            int pwr = atoi(tmp);
+            WriteFEE(chan,(bool)pwr);
+            cmdMessenger.sendCmd(kACK,"FEE State Written");
+        }
+        else
+            cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
+    }
+    else
+        cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
+    Blink();
+}        
+
+void atten_read()
+{
+    char buf[2] = {'\0'};
+    cmdMessenger.copyString(buf, 2);
+    int atten = atoi(buf);
+    if(atten < 2 && atten>=0)
+    {
+        char out [4] = {'\0'};
+        itoa(ReadAtten(atten),out,10);
+        cmdMessenger.sendCmd(kACK,out);
+    }
+    else
+    {
+        String msg = "Chan ";
+        msg += buf[0];
+        msg += " cannot be understood";
+        char out [30] = {'\0'};
+        msg.toCharArray(out,30);
+        cmdMessenger.sendCmd(kERR,out);
+    }
+    Blink();
+}
+
+void atten_write()
+{
+    char buf[5] = {'\0'};
+    cmdMessenger.copyString(buf, 5);
+    if(buf[0])
+    {
+        char tmp[4] = {'\0'};
+        tmp[0] = buf[0];
+        int chan = atoi(tmp);
+        if(buf[1] == '|')
+        {
+            tmp[0] = buf[2];
+            tmp[1] = buf[3];
+            int lvl = atoi(tmp);
+            WriteAtten(chan,lvl);
+            cmdMessenger.sendCmd(kACK,"FEE State Written");
+        }
+        else
+            cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
+    }
+    else
+        cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
+    Blink();
+}        
+
+void filter_read()
+{
+    char out [4] = {'\0'};
+    itoa(ReadFilter(),out,10);
+    cmdMessenger.sendCmd(kACK,out);
+    Blink();
+}
+
+void filter_write()
+{
+    char buf[2] = {'\0'};
+    cmdMessenger.copyString(buf, 2);
+    if(buf[0])
+    {
+        int chan = atoi(buf);
+        if (chan < 3 && chan >= 0)
+        {
+            WriteFilter(chan);
+            cmdMessenger.sendCmd(kACK,"Filter State Written");
+        }
+        else
+            cmdMessenger.sendCmd(kERR,"Filter selection is out of range");
+
+    }
+    else
+        cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
+    Blink();
+}        
+
+void eeprom_read()
+{
+    char out [4] = {'\0'};
+    itoa(ReadEEPROMAddr(),out,10);
+    cmdMessenger.sendCmd(kACK,out);
+    Blink();
+}
+void eeprom_write()
+{
+    char buf[6] = {'\0'};
+    cmdMessenger.copyString(buf, 6);
+    if(buf[0])
+    {
+        int chan = atoi(buf);
+        if (chan < 1024 && chan >= 1)
+        {
+            WriteFilter(chan);
+            cmdMessenger.sendCmd(kACK,"EEPROM Address Updated.");
+        }
+        else
+            cmdMessenger.sendCmd(kERR,"EEPROM Address is out of range");
+
+    }
+    else
+        cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
+    Blink();
+}
+
 
 void debug()
 {
@@ -116,6 +257,8 @@ void debug()
         char buf[60] = { '\0' };
         cmdMessenger.copyString(buf, 60);
         if(buf[0])
+            
+            
             cmdMessenger.sendCmd(kACK,buf);
     }
     Blink();
@@ -155,9 +298,9 @@ void setup()
     /*Serial.begin(57600);  // Arduino Duemilanove, FTDI Serial*/
     Serial.begin(115200); // Arduino Uno, Mega, with AT8u2 USB
 
-    // cmdMessenger.discard_LF_CR(); // Useful if your terminal appends CR/LF,
+    cmdMessenger.discard_LF_CR(); // Useful if your terminal appends CR/LF,
                                      // and you wish to remove them
-    // cmdMessenger.print_LF_CR();   // Make output more readable whilst
+    cmdMessenger.print_LF_CR();   // Make output more readable whilst
                                      // debugging in Arduino Serial Monitor
 
     // Attach default / generic callback methods

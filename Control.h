@@ -12,20 +12,19 @@
 
 void Blink();
 
-void Attens(int level);
-
-int ReadAttens();
+bool WriteAtten(int atten, int level);
+int ReadAtten(int atten);
 
 void WriteFEE(int channel, bool power);
 bool ReadFEE(int channel);
 
-void Filter(int filter);
+void WriteFilter(int filter);
 int ReadFilter(void);
 
-char Checksum(char payload[]);
+char Checksum(char payload[], int len);
 
-void BuildPayload(char payload[]);
-bool ProcessPayload(char payload[]);
+bool WriteEEPROMAddr(int address);
+int ReadEEPROMAddr();
 
 void PinSetup(void);
 
