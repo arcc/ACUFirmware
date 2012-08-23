@@ -21,8 +21,6 @@ bool ReadFEE(int channel);
 void WriteFilter(int filter);
 int ReadFilter(void);
 
-char Checksum(char payload[], int len);
-
 bool WriteEEPROMAddr(int address);
 int ReadEEPROMAddr();
 

@@ -106,15 +106,6 @@ int ReadFilter()
     return filter;
 }
 
-char Checksum(char payload[], int len)
-{
-    char temp = '\0';
-    for(int i = 0; i < len; i++)
-        temp = temp^payload[i];
-
-    return temp;
-}
-
 void PinSetup()
 {
     pinMode(LED_SIGNAL, OUTPUT);
