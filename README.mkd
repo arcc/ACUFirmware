@@ -46,7 +46,7 @@ Where `R` is the response code and `STRING` is a response message.
 
 There are four response codes:
 
-+======+==============+
++------+--------------+
 | Code |    Meaning   |
 +======+==============+
 |  0   |  Comm Error  |
@@ -80,7 +80,7 @@ Commands
 --------
 
 
-+======+==============+
++------+--------------+
 | Code |     Task     |
 +======+==============+
 |  4   |  ACU READY   |
