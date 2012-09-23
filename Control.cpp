@@ -10,14 +10,20 @@
 
 
 int EEPROM_ADDR = 0;
+int EEPROM_SIZE = 255;
+int FLASH_SIZE = 7;
+
+int EEPROM_FEE_OFFSET[4] = {0,1,2,3};
+int EEPROM_FILTER_OFFSET = 4;
+int EEPROM_ATTEN_OFFSET[2] = {5,6};
 
 int LED_SIGNAL = 13;
 
-int F0 = 6;
-int F1 = 7;
+int F0 = 7;
+int F1 = 6;
 
-//int FEE[4] = {2, 3, 4, 5};
-int FEE[4] = {5, 4, 3, 2};
+int FEE[4] = {2, 3, 4, 5};
+//int FEE[4] = {5, 4, 3, 2};
 
 int G0[4] = {8, 9, 10, 11};
 int G1[4] = {A0, A1, A2, A3};
@@ -106,33 +112,73 @@ int ReadFilter()
     return filter;
 }
 
-void PinSetup()
-{
-    pinMode(LED_SIGNAL, OUTPUT);
-    digitalWrite(LED_SIGNAL, LOW);
-    pinMode(F0, OUTPUT);
-    digitalWrite(F0, LOW);
-    pinMode(F1, OUTPUT);
-    digitalWrite(F1, LOW);
-    for (int i=0;i<4;i++)
-    {
-        pinMode(G0[i], OUTPUT);
-        digitalWrite(G0[i], HIGH);
-        pinMode(G1[i], OUTPUT);
-        digitalWrite(G1[i], HIGH);
-        pinMode(FEE[i], OUTPUT);
-        digitalWrite(FEE[i], LOW);
-    }
-}
-
 bool WriteEEPROMAddr(int addr)
 {
-    if (addr > 254)
+    if (addr > (int)(EEPROM_SIZE/FLASH_SIZE)-1)
         return false;
     else
-        EEPROM.write(EEPROM_ADDR,addr);
+        EEPROM.write(EEPROM_ADDR,(addr*FLASH_SIZE)+1);
 }
 int ReadEEPROMAddr()
 {
     return (int)EEPROM.read(EEPROM_ADDR);
 }
+
+int FlashAddr()
+{
+    return ReadEEPROMAddr()*FLASH_SIZE;
+}
+
+void ReadFlash()
+{
+    //Reading FEE's
+    for(int i=0;i<4;i++)
+        WriteFEE(i,EEPROM.read(FlashAddr()+EEPROM_FEE_OFFSET[i]));
+
+    WriteFilter(EEPROM.read(FlashAddr()+EEPROM_FILTER_OFFSET));
+
+    //Write Attens
+    WriteAtten(0,EEPROM.read(FlashAddr()+EEPROM_ATTEN_OFFSET[0]));
+    WriteAtten(1,EEPROM.read(FlashAddr()+EEPROM_ATTEN_OFFSET[1]));
+}
+void WriteFlash()
+{
+    //Write FEE's
+    for(int i=0;i<4;i++)
+        EEPROM.write(FlashAddr()+EEPROM_FEE_OFFSET[i],ReadFEE(i));
+
+    EEPROM.write(FlashAddr()+EEPROM_FILTER_OFFSET,ReadFilter());
+
+    //Write Attens
+    EEPROM.write(FlashAddr()+EEPROM_ATTEN_OFFSET[0],ReadAtten(0));
+    EEPROM.write(FlashAddr()+EEPROM_ATTEN_OFFSET[1],ReadAtten(1));
+}
+
+void PinSetup()
+{
+    pinMode(LED_SIGNAL, OUTPUT);
+    digitalWrite(LED_SIGNAL, LOW);
+    pinMode(F0, OUTPUT);
+    pinMode(F1, OUTPUT);
+    for (int i=0;i<4;i++)
+    {
+        pinMode(G0[i], OUTPUT);
+        pinMode(G1[i], OUTPUT);
+        pinMode(FEE[i], OUTPUT);
+    }
+    
+    //Defaults
+    //WriteFEE(0,true);
+    //WriteFEE(1,true);
+    //WriteFEE(2,true);
+    //WriteFEE(3,true);
+
+    //WriteAtten(0,0);
+    //WriteAtten(1,0);
+
+    //WriteFilter(0);
+
+    ReadFlash();
+    
+}
+

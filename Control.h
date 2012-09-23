@@ -24,6 +24,11 @@ int ReadFilter(void);
 bool WriteEEPROMAddr(int address);
 int ReadEEPROMAddr();
 
+bool FlashAddr();
+
+void WriteFlash();
+void ReadFlash();
+
 void PinSetup(void);
 
 #endif

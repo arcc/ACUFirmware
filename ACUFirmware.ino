@@ -79,6 +79,7 @@ messengerCallbackFunction messengerCallbacks[] =
   atten_write,      // 010
   eeprom_read,      // 011
   eeprom_write,     // 012
+  flash_write,      // 013
   
   NULL
 };
@@ -108,14 +109,7 @@ void fee_read()
             cmdMessenger.sendCmd(kACK,out);
         }
         else
-        {
-            String msg = "Chan ";
-            msg += buf[0];
-            msg += " cannot be understood";
-            char out [30] = {'\0'};
-            msg.toCharArray(out,30);
-            cmdMessenger.sendCmd(kERR,out);
-        }
+            cmdMessenger.sendCmd(kERR,"Filter selection is out of range");
     }
     Blink();
 }
@@ -129,15 +123,20 @@ void fee_write()
         char tmp[4] = {'\0'};
         tmp[0] = buf[0];
         int chan = atoi(tmp);
-        if(buf[1] == '|')
+        if(chan < 4 && chan>=0)
         {
-            tmp[0] = buf[2];
-            int pwr = atoi(tmp);
-            WriteFEE(chan,(bool)pwr);
-            cmdMessenger.sendCmd(kACK,"FEE State Written");
+            if(buf[1] == '|')
+            {
+                tmp[0] = buf[2];
+                int pwr = atoi(tmp);
+                WriteFEE(chan,(bool)pwr);
+                cmdMessenger.sendCmd(kACK,"FEE State Written");
+            }
+            else
+                cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
         }
         else
-            cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
+            cmdMessenger.sendCmd(kERR,"FEE selection is out of range");
     }
     else
         cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
@@ -149,21 +148,19 @@ void atten_read()
     char buf[2] = {'\0'};
     cmdMessenger.copyString(buf, 2);
     int atten = atoi(buf);
-    if(atten < 2 && atten>=0)
+    if(buf[0])
     {
-        char out [4] = {'\0'};
-        itoa(ReadAtten(atten),out,10);
-        cmdMessenger.sendCmd(kACK,out);
+        if(atten < 2 && atten>=0)
+        {
+            char out [4] = {'\0'};
+            itoa(ReadAtten(atten),out,10);
+            cmdMessenger.sendCmd(kACK,out);
+        }
+        else
+            cmdMessenger.sendCmd(kERR,"Atten selection is out of range");
     }
     else
-    {
-        String msg = "Chan ";
-        msg += buf[0];
-        msg += " cannot be understood";
-        char out [30] = {'\0'};
-        msg.toCharArray(out,30);
-        cmdMessenger.sendCmd(kERR,out);
-    }
+        cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
     Blink();
 }
 
@@ -176,13 +173,18 @@ void atten_write()
         char tmp[4] = {'\0'};
         tmp[0] = buf[0];
         int chan = atoi(tmp);
-        if(buf[1] == '|')
+        if(chan < 2 && chan>=0)
         {
-            tmp[0] = buf[2];
-            tmp[1] = buf[3];
-            int lvl = atoi(tmp);
-            WriteAtten(chan,lvl);
-            cmdMessenger.sendCmd(kACK,"FEE State Written");
+            if(buf[1] == '|')
+            {
+                tmp[0] = buf[2];
+                tmp[1] = buf[3];
+                int lvl = atoi(tmp);
+                WriteAtten(chan,lvl);
+                cmdMessenger.sendCmd(kACK,"Atten State Written");
+            }
+            else
+                cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
         }
         else
             cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
@@ -249,6 +251,11 @@ void eeprom_write()
     Blink();
 }
 
+void flash_write()
+{
+    WriteFlash();
+    cmdMessenger.sendCmd(kACK,"EEPROM Written.");
+}
 
 void debug()
 {
