@@ -10,7 +10,7 @@
 
 
 int EEPROM_ADDR = 0;
-int EEPROM_SIZE = 255;
+int EEPROM_SIZE = 1024;
 int FLASH_SIZE = 7;
 
 int EEPROM_FEE_OFFSET[4] = {0,1,2,3};

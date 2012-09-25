@@ -10,6 +10,9 @@
 
 #include "Arduino.h"
 
+extern int EEPROM_SIZE;
+extern int FLASH_SIZE;
+
 void Blink();
 
 bool WriteAtten(int atten, int level);

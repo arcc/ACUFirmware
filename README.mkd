@@ -92,13 +92,16 @@ Commands
 +------+--------------+
 |  10  | Atten Write  |
 +------+--------------+
-|  11  | EEPROM Write |
+|  11  | EEPROM Read  |
 +------+--------------+
-|  12  | EEPROM Read  |
+|  12  | EEPROM Write |
++------+--------------+
+|  13  | Flash Write  |
 +------+--------------+
 
 ### ACU READY ###
 ARGUMENTS: None
+
 EXAMPLE: `4;`
 
 The ACU Ready (`4`) command queries the ACU for a `RDY` response. This serves
@@ -107,6 +110,7 @@ working state and available to take commands.
 
 ### FEE Read ###
 ARGUMENTS: Channel (0-3)
+
 EXAMPLE: `5,1;`
 
 The FEE Read (`5`) command queries the ACU for the state of the specified FEE.
@@ -114,6 +118,7 @@ It returns a `1` for on and a `0` for off.
 
 ### FEE Write ###
 ARGUMENTS: Channel (0-3), State (0,1)
+
 EXAMPLE: `6,0|1;`
 
 The FEE Write (`6`) command sets the state of the specified FEE. It takes an
@@ -122,6 +127,7 @@ specifier by a vertical pipe (`|`).
 
 ### Filter Read ###
 ARGUMENTS: None
+
 EXAMPLE: `7;`
 
 The Filter Read (`7`) command queries the ACU for the filter state. It returns
@@ -131,6 +137,7 @@ Memo].
 
 ### Filter Write ###
 ARGUMENTS: Filter State (0-2)
+
 EXAMPLE: `8,2;`
 
 The Filter Write (`8`) command sets the filter state. It takes an argument of
@@ -140,6 +147,7 @@ Memo].
 
 ### Atten Read ###
 ARGUMENTS: Attenuator (0,1)
+
 EXAMPLE: `9,1;`
 
 The Atten Read (`9`) command queries the ACU for the state of the specified
@@ -151,6 +159,7 @@ corresponds to a 14dB attenuation).
 
 ### Atten Write ###
 ARGUMENTS: Attenuator (0,1), Attenuation Level (0-15)
+
 EXAMPLE: `10,1|7;`
 
 The Atten Write (`10`) command sets the state of the specified Attenuator. This
@@ -160,22 +169,35 @@ that this is not the attenuation in dB, which can be calculated by multiplying
 the attenuation level by 2 (i.e. an attenuation level of 7 corresponds to a 14dB
 attenuation).
 
+### Flash Write ###
+ARGUMENTS: None
+
+EXAMPLE: `13;`
+
+The Flash Write (`13`) command writes the current ACU state to EEPROM. It writes
+the state to the area of EEPROM as specified by the EPROM Read command. For
+information on the size of the written package and the number of positions
+available, please consult the [ARX Control Interface Memo][ARX_C_I]
+
+
 ### Future Commands ###
 These commands will be implemented in the future, and are not currently
 functional. 
 
 #### EEPROM Read ####
 ARGUMENTS: None
+
 EXAMPLE: `11;`
 
-The EEPROM Read (`11`) command queries the ACU for the current EEPROM address at
+The EEPROM Read (`11`) command queries the ACU for the current EEPROM offset at
 which the configuration state is stored. 
 
 #### EEPROM Write ####
-ARGUMENTS: Byte Offset (1-1024)
-EXAMPLE: `12,180;`
+ARGUMENTS: Position Offset
 
-The EEPROM Write (`12`) command sets the current EEPROM address at which the
+EXAMPLE: `12,4;`
+
+The EEPROM Write (`12`) command sets the current EEPROM offset at which the
 configuration state is stored. This is used to shift the location at which
 configuration is stored to prevent failure of the underlying EEPROM.
 

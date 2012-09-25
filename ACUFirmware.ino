@@ -236,10 +236,10 @@ void eeprom_write()
     cmdMessenger.copyString(buf, 6);
     if(buf[0])
     {
-        int chan = atoi(buf);
-        if (chan < 1024 && chan >= 1)
+        int offset = atoi(buf);
+        if (offset < (EEPROM_SIZE/FLASH_SIZE) && offset >= 0)
         {
-            WriteFilter(chan);
+            WriteEEPROMAddr(offset);
             cmdMessenger.sendCmd(kACK,"EEPROM Address Updated.");
         }
         else
@@ -255,6 +255,7 @@ void flash_write()
 {
     WriteFlash();
     cmdMessenger.sendCmd(kACK,"EEPROM Written.");
+    Blink();
 }
 
 void debug()
