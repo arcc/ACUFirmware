@@ -308,7 +308,7 @@ void setup()
 
     cmdMessenger.discard_LF_CR(); // Useful if your terminal appends CR/LF,
                                      // and you wish to remove them
-    cmdMessenger.print_LF_CR();   // Make output more readable whilst
+    /*cmdMessenger.print_LF_CR();   // Make output more readable whilst*/
                                      // debugging in Arduino Serial Monitor
 
     // Attach default / generic callback methods
