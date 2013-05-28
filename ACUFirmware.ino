@@ -80,6 +80,7 @@ messengerCallbackFunction messengerCallbacks[] =
   eeprom_read,      // 011
   eeprom_write,     // 012
   flash_write,      // 013
+  roach_power,      // 014
   
   NULL
 };
@@ -257,6 +258,27 @@ void flash_write()
     cmdMessenger.sendCmd(kACK,"EEPROM Written.");
     Blink();
 }
+
+void roach_power()
+{
+    char buf[2] = {'\0'};
+    cmdMessenger.copyString(buf, 2);
+    if(buf[0])
+    {
+        int state = atoi(buf);
+        if (state == 0 || state == 1)
+        {
+            WriteRoach(state);
+            cmdMessenger.sendCmd(kACK,"Roach Power State Written");
+        }
+        else
+            cmdMessenger.sendCmd(kERR,"Roach Power State is not out of range");
+    }
+    else
+        cmdMessenger.sendCmd(kERR,"Data string could not be parsed");
+    Blink();
+}        
+
 
 void debug()
 {

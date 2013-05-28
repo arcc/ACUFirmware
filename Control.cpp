@@ -28,6 +28,10 @@ int FEE[4] = {2, 3, 4, 5};
 int G0[4] = {8, 9, 10, 11};
 int G1[4] = {A0, A1, A2, A3};
 
+int ROACH_POWER = 12;
+int ROACH_ON_DELAY = 500;
+int ROACH_RESET_DELAY = 3000;
+
 void Blink()
 {
     digitalWrite(LED_SIGNAL, HIGH);
@@ -141,6 +145,7 @@ void ReadFlash()
     WriteAtten(0,EEPROM.read(FlashAddr()+EEPROM_ATTEN_OFFSET[0]));
     WriteAtten(1,EEPROM.read(FlashAddr()+EEPROM_ATTEN_OFFSET[1]));
 }
+
 void WriteFlash()
 {
     //Write FEE's
@@ -154,12 +159,25 @@ void WriteFlash()
     EEPROM.write(FlashAddr()+EEPROM_ATTEN_OFFSET[1],ReadAtten(1));
 }
 
+void WriteRoach(int state)
+{
+    //Set ROACH_POWER high for a few seconds
+    digitalWrite(ROACH_POWER, HIGH);
+    if (state)//inverted so a 1 state means turning on ROACH
+        delay(ROACH_ON_DELAY);
+    else
+        delay(ROACH_RESET_DELAY);
+    digitalWrite(ROACH_POWER, LOW);
+}
+    
+
 void PinSetup()
 {
     pinMode(LED_SIGNAL, OUTPUT);
     digitalWrite(LED_SIGNAL, LOW);
     pinMode(F0, OUTPUT);
     pinMode(F1, OUTPUT);
+    pinMode(ROACH_POWER, OUTPUT);
     for (int i=0;i<4;i++)
     {
         pinMode(G0[i], OUTPUT);

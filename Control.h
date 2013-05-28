@@ -31,6 +31,7 @@ bool FlashAddr();
 
 void WriteFlash();
 void ReadFlash();
+void WriteRoach(int state);
 
 void PinSetup(void);
 
