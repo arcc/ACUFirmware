@@ -30,7 +30,7 @@ int G1[4] = {A0, A1, A2, A3};
 
 int ROACH_POWER = 12;
 int ROACH_ON_DELAY = 500;
-int ROACH_RESET_DELAY = 3000;
+int ROACH_RESET_DELAY = 5000;
 
 void Blink()
 {
